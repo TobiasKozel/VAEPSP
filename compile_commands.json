@@ -1,0 +1,23 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/g++",
+      "-I.",
+      "-I/home/usr/git/psp/docker/include",
+      "-g",
+      "-G0",
+      "-O0",
+      "-fno-exceptions",
+      "-fno-rtti",
+      "-fno-threadsafe-statics",
+      "-D_PSP_FW_VERSION=150",
+      "-c",
+      "-o",
+      "main.o",
+      "main.cpp"
+    ],
+    "directory": "/home/usr/git/psp/docker/example",
+    "file": "/home/usr/git/psp/docker/example/main.cpp",
+    "output": "/home/usr/git/psp/docker/example/main.o"
+  }
+]
