@@ -8,9 +8,10 @@
 #include <pspctrl.h>
 #include <psppower.h>
 #include <stdio.h>
+#include <cassert>
 #include "./platform_shared.hpp"
 
-extern "C" void __cxa_pure_virtual() { while (1); }
+extern "C" void __cxa_pure_virtual() { while (1); } // needed until tklb::MemoryPool is removed
 
 extern "C"
 {
@@ -25,10 +26,32 @@ PSP_MODULE_INFO("VAEPSPTEST", 0, 1, 1);
 /* Define the main thread's attribute value (optional) */
 PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
 
-
 #define VAE_PRINT(...) fprintf(stdout, __VA_ARGS__);
-#define TKLB_ASSERT(condition) if (!(condition)) { fprintf(stdout, "Assert failed at " __FILE__ ":%i\n", __LINE__); }
 #define PRINT_SCREEN(...) pspDebugScreenPrintf(__VA_ARGS__);
+
+void MyExceptionHandler(PspDebugRegBlock *regs) {
+	// never called on PPSSPP
+	printf("\n\n");
+	pspDebugDumpException(regs);
+}
+
+void handleAssert() {
+	/* Cause a break exception */
+	asm(
+		"break\r\n"
+	);
+	const int maxElem = 32;
+	unsigned int results[maxElem];
+	int result = pspDebugGetStackTrace(results, maxElem);
+	VAE_PRINT("Try getting trace\n");
+	for (int i = 0; i < result; i++) {
+		VAE_PRINT("%i\t%i\n", i, results[i]);
+	}
+	VAE_PRINT("trace end\n");
+	// assert(false);
+}
+
+#define TKLB_ASSERT(condition) if (!(condition)) { fprintf(stdout, "Assert failed at " __FILE__ ":%i\n", __LINE__); handleAssert(); }
 
 /* Exit callback */
 int exitCallback(int arg1, int arg2, void *common) {
@@ -57,6 +80,10 @@ int setupCallbacks(void) {
 }
 
 void setup(AudioCallback callback, void* context) {
+	VAE_PRINT("Install exception handler\n");
+	int ret = pspDebugInstallErrorHandler(MyExceptionHandler);
+	// Not implemented on PPSSPP
+	VAE_PRINT("Exceptionshandler returned %i\n", ret);
 	_DisableFPUExceptions();
 	scePowerSetClockFrequency(333, 333, 166);
 	setupCallbacks();
@@ -83,7 +110,9 @@ ButtonsPressed update() {
 #define VAE_NO_STDIO
 
 void* vae_file_open(const char* path, const char* mode) {
-	size_t ptr = sceIoOpen(path, PSP_O_RDONLY, 0777);
+	int handle = sceIoOpen(path, PSP_O_RDONLY, 0777);
+	if (handle < 0) { return nullptr; }
+	size_t ptr = handle;
 	return reinterpret_cast<void*>(ptr);
 }
 

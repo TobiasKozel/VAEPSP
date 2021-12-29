@@ -5,6 +5,9 @@
 #endif
 
 #include <limits.h>
+
+#define VAE_LOG_VOICES
+#define VAE_LOG_EVENTS
 #define VAE_NO_EXCEPT
 #define VAE_NO_SIMD
 #define VAE_NO_AUDIO_THREAD
@@ -37,16 +40,13 @@ int main() {
 	settings.rootPath = ROOT_PATH;
 	settings.hrtfVoices = 0;
 	settings.voices = 8;
-	settings.preAllocatedEmitters = 128;
+	settings.preAllocatedEmitters = 64;
 	settings.virtualVoices = 32;
-	settings.bufferPeriods = 2;
 	settings.finishedVoiceQueueSize = 16;
-	settings.preferredBufferSize = 128;
 	engine.init(settings);
-	engine.setMasterVolume(SHRT_MAX - 1.0f);
 	success = engine.loadBank("smallbank") == vae::Result::Success;
 	emitter = engine.createEmitter();
-	engine.fireEvent(0, 0, emitter);
+	engine.fireEvent(0, 1, emitter);
 	unsigned int ref = 0;
 	while(1) {
 		auto pressed = update();
@@ -55,10 +55,11 @@ int main() {
 		}
 		if (pressed.X) {
 			PRINT_SCREEN("\n X PRESSED");
-			engine.fireEvent(0, 1, emitter);
+			engine.fireEvent(0, 0, emitter);
 		} else {
 			PRINT_SCREEN("\n NOT X PRESSED");
 		}
+		// engine.setSpeed(emitter, sin(ref * 0.3) * 0.2 + 1.0);
 		PRINT_SCREEN("\nTime %u", engine.getStreamTime());
 		PRINT_SCREEN("\nVoices %u", engine.getActiveVoiceCount());
 		PRINT_SCREEN("\nReference %u", ref);
