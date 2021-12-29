@@ -48,6 +48,7 @@ int main() {
 	emitter = engine.createEmitter();
 	engine.fireEvent(0, 1, emitter);
 	unsigned int ref = 0;
+	bool released = true;
 	while(1) {
 		auto pressed = update();
 		if (success) {
@@ -55,8 +56,12 @@ int main() {
 		}
 		if (pressed.X) {
 			PRINT_SCREEN("\n X PRESSED");
-			engine.fireEvent(0, 0, emitter);
+			if (released) {
+				engine.fireEvent(0, 0, emitter);
+				released = false;
+			}
 		} else {
+			released = true;
 			PRINT_SCREEN("\n NOT X PRESSED");
 		}
 		// engine.setSpeed(emitter, sin(ref * 0.3) * 0.2 + 1.0);
